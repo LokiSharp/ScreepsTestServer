@@ -1,0 +1,18 @@
+{
+  "ts-node": {
+    "transpileOnly": true
+  },
+  "compilerOptions": {
+    "module": "ESNext",
+    "lib": ["ES2018"],
+    "target": "ES5",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "baseUrl": "src/",
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true
+  },
+  "exclude": ["node_modules", "dist", "rollup.config.ts"]
+}
