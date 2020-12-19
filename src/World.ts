@@ -3,7 +3,7 @@ import * as zlib from "zlib";
 import { CommonConstants, CommonStorageDBCollection, CommonStorageEnv, CommonStoragePubsub } from "../types/Common";
 import { DBRoom, DBRoomObject } from "../types/DataBase";
 import { find, first, get, map, some } from "lodash";
-import Server from "./ScreepsServer";
+import Server from "./Server";
 import TerrainMatrix from "./TerrainMatrix";
 import User from "./User";
 

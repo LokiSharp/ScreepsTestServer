@@ -1,5 +1,4 @@
 {
-	"mods":[
-	],
+	"mods":["../server/mods/change-constant/index.js"],
 	"bots":{}
 }

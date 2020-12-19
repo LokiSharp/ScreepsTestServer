@@ -1,7 +1,7 @@
 import { DBUser, DBUserConsole } from "../types/DataBase";
 import { clone, first, get } from "lodash";
 import { EventEmitter } from "events";
-import ScreepsServer from "./ScreepsServer";
+import Server from "./Server";
 
 export interface UserNotification {
   message: string;
@@ -15,9 +15,9 @@ export default class User extends EventEmitter {
   private knownNotifications: string[];
   private _id: string;
   private _username: string;
-  private _server: ScreepsServer;
+  private _server: Server;
 
-  public constructor(server: ScreepsServer, data: { _id: string; username: string }) {
+  public constructor(server: Server, data: { _id: string; username: string }) {
     super();
     this._id = data._id;
     this._username = data.username;

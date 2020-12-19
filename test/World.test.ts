@@ -1,6 +1,6 @@
 import { each, find, size, sumBy, toArray } from "lodash";
 import { SerializedRoomObject } from "../src/World";
-import Server from "../src/ScreepsServer";
+import Server from "../src/Server";
 import StdHooks from "../utils/StdHooks";
 import { expect } from "chai";
 import { removeAsync } from "fs-extra-promise";

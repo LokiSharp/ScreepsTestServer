@@ -1,8 +1,9 @@
 import { accessSync, removeAsync } from "fs-extra-promise";
-import Server from "../src/ScreepsServer";
+import Server from "../src/Server";
 import StdHooks from "../utils/StdHooks";
 import { expect } from "chai";
 import { resolve } from "path";
+import { setConstants } from "../utils/setConstants";
 
 StdHooks.hookWrite();
 
@@ -71,6 +72,16 @@ describe("ScreepsServer", function () {
     server.stop();
     // 检验输出是否符合
     expect(logs).to.deep.equal(["tick 1", "tick 2", "tick 3", "tick 4", "tick 5"]);
+  });
+
+  it("可以修改常量", async () => {
+    // 初始化服务器
+    setConstants({ FOO: 2 });
+    server = new Server();
+    await server.world.stubWorld();
+    // 检验是否符合预期
+    expect((await server.world.load()).C.FOO).to.equal(2);
+    server.stop();
   });
 
   afterEach(async () => {

@@ -15,6 +15,7 @@ const driver = require("@screeps/driver") as Driver;
 const ASSETS_PATH = path.join(__dirname, "..", "assets");
 const MOD_FILE = "mods.json";
 const DB_FILE = "db.json";
+const MOD_DIR = "mods";
 
 export interface ScreepServerOptions {
   path: string;
@@ -98,7 +99,8 @@ export default class Server extends EventEmitter {
     // 复制 asset 到 server 目录
     await Promise.all([
       fs.copyAsync(path.join(ASSETS_PATH, DB_FILE), path.join(this.opts.path, DB_FILE)),
-      fs.copyAsync(path.join(ASSETS_PATH, MOD_FILE), path.join(this.opts.path, MOD_FILE))
+      fs.copyAsync(path.join(ASSETS_PATH, MOD_FILE), path.join(this.opts.path, MOD_FILE)),
+      fs.copyAsync(path.join(ASSETS_PATH, MOD_DIR), path.join(this.opts.path, MOD_DIR))
     ]);
     // 启动 storage 进程
     this.emit("info", "Starting storage process.");
@@ -121,10 +123,10 @@ export default class Server extends EventEmitter {
     try {
       const oldLog = console.log;
       console.log = noop; // 禁用控制台
-      await driver.connect("main");
+      await this.driver.connect("main");
       console.log = oldLog; // 重启控制台
-      this.usersQueue = driver.queue.create("users");
-      this.roomsQueue = driver.queue.create("rooms");
+      this.usersQueue = this.driver.queue.create("users");
+      this.roomsQueue = this.driver.queue.create("rooms");
       this.connected = true;
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unsafe-member-access
@@ -137,23 +139,23 @@ export default class Server extends EventEmitter {
    * 运行一个 tick
    */
   public async tick(): Promise<Server> {
-    await driver.notifyTickStarted();
-    const users = await driver.getAllUsers();
+    await this.driver.notifyTickStarted();
+    const users = await this.driver.getAllUsers();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await this.usersQueue?.addMulti(map(users, user => user._id!.toString()));
     await this.usersQueue?.whenAllDone();
-    const rooms = (await driver.getAllRoomsNames()) || [];
+    const rooms = (await this.driver.getAllRoomsNames()) || [];
     await this.roomsQueue?.addMulti(rooms);
     await this.roomsQueue?.whenAllDone();
-    await driver.commitDbBulk();
+    await this.driver.commitDbBulk();
     // eslint-disable-next-line global-require,@typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-call
     await require("@screeps/engine/src/processor/global")();
-    await driver.commitDbBulk();
-    const gameTime = await driver.incrementGameTime();
-    await driver.updateAccessibleRoomsList();
-    await driver.updateRoomStatusData();
-    await driver.notifyRoomsDone(gameTime);
-    await driver.config.mainLoopCustomStage();
+    await this.driver.commitDbBulk();
+    const gameTime = await this.driver.incrementGameTime();
+    await this.driver.updateAccessibleRoomsList();
+    await this.driver.updateRoomStatusData();
+    await this.driver.notifyRoomsDone(gameTime);
+    await this.driver.config.mainLoopCustomStage();
     return this;
   }
 
@@ -163,7 +165,7 @@ export default class Server extends EventEmitter {
    * @param execPath 脚本路径
    * @param env 环境变量
    */
-  public async startProcess(name: string, execPath: string, env: NodeJS.ProcessEnv): Promise<cp.ChildProcess> {
+  public async startProcess(name: string, execPath: string, env: Record<string, string>): Promise<cp.ChildProcess> {
     const fd = await fs.openAsync(path.resolve(this.opts.logdir, `${name}.log`), "a");
     this.processes[name] = cp.fork(path.resolve(execPath), [], { stdio: [0, fd, fd, "ipc"], env });
     this.emit("info", `[${name}] process ${this.processes[name].pid} started`);
@@ -196,7 +198,8 @@ export default class Server extends EventEmitter {
       await this.connect();
     }
     this.emit("info", "Starting engine processes.");
-    void this.startProcess(
+
+    await this.startProcess(
       "engine_runner",
       path.resolve(path.dirname(require.resolve("@screeps/engine")), "runner.js"),
       {
@@ -205,7 +208,7 @@ export default class Server extends EventEmitter {
         STORAGE_PORT: `${this.opts.port}`
       }
     );
-    void this.startProcess(
+    await this.startProcess(
       "engine_processor",
       path.resolve(path.dirname(require.resolve("@screeps/engine")), "processor.js"),
       {
@@ -215,8 +218,8 @@ export default class Server extends EventEmitter {
       }
     );
 
-    await driver.updateAccessibleRoomsList();
-    await driver.updateRoomStatusData();
+    await this.driver.updateAccessibleRoomsList();
+    await this.driver.updateRoomStatusData();
 
     return this;
   }

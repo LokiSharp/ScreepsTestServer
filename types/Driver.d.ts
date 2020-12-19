@@ -25,11 +25,7 @@ export interface Driver {
   notifyRoomsDone(gameTime: number): Promise<CommonStoragePubsub>;
 }
 
-export interface DriverConfig extends CommonConfig {
-  engine: DriverEngine;
-}
-
-export interface DriverEngine {
+export interface DriverEngine extends CommonConfig {
   driver: Driver;
   mainLoopMinDuration: number;
   mainLoopResetInterval: number;
